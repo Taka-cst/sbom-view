@@ -1,0 +1,103 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "my-python-app",
+  "documentNamespace": "https://example.com/my-python-app-1.0.0",
+  "creationInfo": {
+    "created": "2026-03-23T10:00:00Z",
+    "creators": ["Tool: sbom-generator-1.0"]
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-root",
+      "name": "my-python-app",
+      "versionInfo": "1.0.0",
+      "downloadLocation": "https://example.com/my-python-app",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "description": "A sample Python web application"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-flask",
+      "name": "Flask",
+      "versionInfo": "3.1.0",
+      "downloadLocation": "https://pypi.org/project/Flask/",
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "BSD-3-Clause",
+      "externalRefs": [
+        { "referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:pypi/flask@3.1.0" }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-werkzeug",
+      "name": "Werkzeug",
+      "versionInfo": "3.0.1",
+      "downloadLocation": "https://pypi.org/project/Werkzeug/",
+      "licenseConcluded": "BSD-3-Clause",
+      "externalRefs": [
+        { "referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:pypi/werkzeug@3.0.1" }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-jinja2",
+      "name": "Jinja2",
+      "versionInfo": "3.1.3",
+      "downloadLocation": "https://pypi.org/project/Jinja2/",
+      "licenseConcluded": "BSD-3-Clause",
+      "externalRefs": [
+        { "referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:pypi/jinja2@3.1.3" }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-markupsafe",
+      "name": "MarkupSafe",
+      "versionInfo": "2.1.4",
+      "downloadLocation": "https://pypi.org/project/MarkupSafe/",
+      "licenseConcluded": "BSD-3-Clause",
+      "externalRefs": [
+        { "referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:pypi/markupsafe@2.1.4" }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-requests",
+      "name": "requests",
+      "versionInfo": "2.31.0",
+      "downloadLocation": "https://pypi.org/project/requests/",
+      "licenseConcluded": "Apache-2.0",
+      "externalRefs": [
+        { "referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:pypi/requests@2.31.0" }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-urllib3",
+      "name": "urllib3",
+      "versionInfo": "2.1.0",
+      "downloadLocation": "https://pypi.org/project/urllib3/",
+      "licenseConcluded": "MIT",
+      "externalRefs": [
+        { "referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:pypi/urllib3@2.1.0" }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-sqlalchemy",
+      "name": "SQLAlchemy",
+      "versionInfo": "2.0.25",
+      "downloadLocation": "https://pypi.org/project/SQLAlchemy/",
+      "licenseConcluded": "MIT",
+      "externalRefs": [
+        { "referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:pypi/sqlalchemy@2.0.25" }
+      ]
+    }
+  ],
+  "relationships": [
+    { "spdxElementId": "SPDXRef-DOCUMENT", "relationshipType": "DESCRIBES", "relatedSpdxElement": "SPDXRef-Package-root" },
+    { "spdxElementId": "SPDXRef-Package-root", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-flask" },
+    { "spdxElementId": "SPDXRef-Package-root", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-requests" },
+    { "spdxElementId": "SPDXRef-Package-root", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-sqlalchemy" },
+    { "spdxElementId": "SPDXRef-Package-flask", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-werkzeug" },
+    { "spdxElementId": "SPDXRef-Package-flask", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-jinja2" },
+    { "spdxElementId": "SPDXRef-Package-jinja2", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-markupsafe" },
+    { "spdxElementId": "SPDXRef-Package-requests", "relationshipType": "DEPENDS_ON", "relatedSpdxElement": "SPDXRef-Package-urllib3" }
+  ]
+}

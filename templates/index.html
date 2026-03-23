@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBOM Viewer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>SBOM Viewer</h1>
+        <p class="subtitle">Software Bill of Materials — コンポーネント解析ツール</p>
+    </header>
+
+    <main>
+        <!-- Upload Section -->
+        <section id="upload-section">
+            <input type="file" id="file-input" accept=".json" hidden>
+            <div class="upload-area" id="drop-zone">
+                <div class="upload-icon">📄</div>
+                <p>SBOM JSONファイルをドラッグ＆ドロップ</p>
+                <p class="upload-hint">または</p>
+                <button type="button" class="upload-btn" id="file-select-btn">ファイルを選択</button>
+                <p class="upload-formats">対応フォーマット: CycloneDX / SPDX (JSON)</p>
+            </div>
+        </section>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <p>解析中...</p>
+        </div>
+
+        <!-- Error -->
+        <div id="error-msg" class="hidden"></div>
+
+        <!-- Results -->
+        <section id="results" class="hidden">
+            <!-- Back button -->
+            <div id="results-header">
+                <button id="back-btn">← 別ファイルを解析</button>
+            </div>
+
+            <!-- Summary -->
+            <div id="summary" class="card">
+                <h2>概要</h2>
+                <div class="summary-grid" id="summary-content"></div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="table-view">テーブル表示</button>
+                <button class="tab" data-tab="tree-view">依存関係ツリー</button>
+            </div>
+
+            <!-- Table View -->
+            <div id="table-view" class="tab-content active">
+                <div class="table-controls">
+                    <input type="text" id="search-input" placeholder="コンポーネント名で検索...">
+                    <select id="type-filter">
+                        <option value="">すべてのタイプ</option>
+                    </select>
+                    <span id="component-count"></span>
+                </div>
+                <div class="table-wrapper">
+                    <table id="components-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="name">名前 <span class="sort-icon"></span></th>
+                                <th class="sortable" data-sort="version">バージョン <span class="sort-icon"></span></th>
+                                <th class="sortable" data-sort="type">タイプ <span class="sort-icon"></span></th>
+                                <th>ライセンス</th>
+                                <th class="sortable" data-sort="group">グループ</th>
+                                <th>PURL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tree View -->
+            <div id="tree-view" class="tab-content">
+                <div id="tree-controls">
+                    <button id="expand-all">すべて展開</button>
+                    <button id="collapse-all">すべて折りたたむ</button>
+                    <button id="reset-zoom">ズームリセット</button>
+                    <button id="restore-nodes" class="hidden">すべてのノードを表示</button>
+                </div>
+                <div id="no-deps-msg" class="hidden">
+                    <p>このSBOMには依存関係情報が含まれていません。</p>
+                </div>
+                <div id="tree-container"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>SBOM Viewer — CycloneDX / SPDX 対応</p>
+    </footer>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>
