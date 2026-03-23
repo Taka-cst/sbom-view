@@ -16,6 +16,9 @@ const searchInput = document.getElementById('search-input');
 const typeFilter = document.getElementById('type-filter');
 const componentCount = document.getElementById('component-count');
 
+const urlInput = document.getElementById('url-input');
+const urlFetchBtn = document.getElementById('url-fetch-btn');
+
 // File Upload — only the button triggers the file dialog
 fileSelectBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -43,6 +46,45 @@ fileInput.addEventListener('change', (e) => {
     if (file) uploadFile(file);
     fileInput.value = '';
 });
+
+// URL fetch
+urlFetchBtn.addEventListener('click', () => fetchFromUrl());
+urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') fetchFromUrl();
+});
+
+async function fetchFromUrl() {
+    const url = urlInput.value.trim();
+    if (!url) {
+        showError('URLを入力してください。');
+        return;
+    }
+
+    loading.classList.remove('hidden');
+    errorMsg.classList.add('hidden');
+    results.classList.add('hidden');
+
+    try {
+        const resp = await fetch('/api/fetch-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            showError(data.error || 'URLからの取得中にエラーが発生しました。');
+            return;
+        }
+
+        sbomData = data;
+        renderResults();
+    } catch (err) {
+        showError('URLからの取得中にエラーが発生しました: ' + err.message);
+    } finally {
+        loading.classList.add('hidden');
+    }
+}
 
 async function uploadFile(file) {
     if (!file.name.endsWith('.json')) {

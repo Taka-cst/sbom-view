@@ -1,5 +1,10 @@
 import json
 import os
+import tempfile
+import uuid
+from urllib.parse import urlparse
+
+import requests
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
@@ -7,6 +12,11 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB limit
 
 UPLOAD_FOLDER = '/tmp/sbom-uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# URL fetch settings
+MAX_URL_SIZE = 50 * 1024 * 1024  # 50MB
+URL_TIMEOUT = 30  # seconds
+ALLOWED_SCHEMES = {'http', 'https'}
 
 
 def detect_format(data):
@@ -168,6 +178,53 @@ def parse_spdx(data):
     }
 
 
+def validate_sbom_structure(data):
+    """Validate that the JSON has a recognizable SBOM structure.
+
+    Returns (format_name, error_message). If valid, error_message is None.
+    """
+    if not isinstance(data, dict):
+        return None, 'JSONのルートがオブジェクトではありません。'
+
+    fmt = detect_format(data)
+    if fmt == 'unknown':
+        return None, 'SBOMフォーマットを認識できません（CycloneDX / SPDX のみ対応）。'
+
+    # CycloneDX: components list must exist
+    if fmt == 'cyclonedx':
+        comps = data.get('components', [])
+        if not isinstance(comps, list):
+            return None, 'CycloneDX: components が配列ではありません。'
+
+    # SPDX: packages list must exist
+    if fmt == 'spdx':
+        pkgs = data.get('packages', [])
+        if not isinstance(pkgs, list):
+            return None, 'SPDX: packages が配列ではありません。'
+
+    return fmt, None
+
+
+def validate_url(url_str):
+    """Basic URL validation. Returns (parsed_url, error_message)."""
+    if not url_str or not url_str.strip():
+        return None, 'URLが空です。'
+
+    url_str = url_str.strip()
+    try:
+        parsed = urlparse(url_str)
+    except Exception:
+        return None, 'URLの形式が不正です。'
+
+    if parsed.scheme not in ALLOWED_SCHEMES:
+        return None, f'スキームは http または https のみ対応しています（入力: {parsed.scheme}）。'
+
+    if not parsed.netloc:
+        return None, 'URLにホスト名がありません。'
+
+    return parsed, None
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -188,7 +245,10 @@ def parse_sbom():
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
         return jsonify({'error': f'Invalid JSON file: {str(e)}'}), 400
 
-    fmt = detect_format(data)
+    fmt, err = validate_sbom_structure(data)
+    if err:
+        return jsonify({'error': err}), 400
+
     if fmt == 'cyclonedx':
         result = parse_cyclonedx(data)
     elif fmt == 'spdx':
@@ -197,6 +257,82 @@ def parse_sbom():
         return jsonify({'error': 'Unknown SBOM format. Supported: CycloneDX, SPDX'}), 400
 
     return jsonify(result)
+
+
+@app.route('/api/fetch-url', methods=['POST'])
+def fetch_url():
+    """Fetch a JSON SBOM from a remote URL, validate, parse, then delete the temp file."""
+    body = request.get_json(silent=True) or {}
+    url_str = body.get('url', '')
+
+    # --- URL validation ---
+    parsed, err = validate_url(url_str)
+    if err:
+        return jsonify({'error': err}), 400
+
+    # --- Download to temp file ---
+    tmp_path = None
+    try:
+        resp = requests.get(
+            url_str,
+            timeout=URL_TIMEOUT,
+            stream=True,
+            headers={'Accept': 'application/json'},
+            allow_redirects=True,
+        )
+        resp.raise_for_status()
+
+        # Check content-length if provided
+        cl = resp.headers.get('Content-Length')
+        if cl and int(cl) > MAX_URL_SIZE:
+            return jsonify({'error': f'ファイルサイズが大きすぎます（上限 {MAX_URL_SIZE // (1024*1024)}MB）。'}), 400
+
+        # Stream to temp file with size guard
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix='.json', dir=UPLOAD_FOLDER)
+        downloaded = 0
+        with os.fdopen(tmp_fd, 'wb') as f:
+            for chunk in resp.iter_content(chunk_size=65536):
+                downloaded += len(chunk)
+                if downloaded > MAX_URL_SIZE:
+                    raise ValueError('ファイルサイズが上限を超えました。')
+                f.write(chunk)
+
+        # --- Parse JSON ---
+        with open(tmp_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # --- Validate SBOM structure ---
+        fmt, err = validate_sbom_structure(data)
+        if err:
+            return jsonify({'error': f'取得したファイルはSBOMとして認識できません: {err}'}), 400
+
+        # --- Parse into our format ---
+        if fmt == 'cyclonedx':
+            result = parse_cyclonedx(data)
+        else:
+            result = parse_spdx(data)
+
+        return jsonify(result)
+
+    except requests.exceptions.Timeout:
+        return jsonify({'error': f'URLへの接続がタイムアウトしました（{URL_TIMEOUT}秒）。'}), 400
+    except requests.exceptions.ConnectionError:
+        return jsonify({'error': 'URLに接続できませんでした。ネットワークまたはURLを確認してください。'}), 400
+    except requests.exceptions.HTTPError as e:
+        return jsonify({'error': f'HTTPエラー: {e.response.status_code}'}), 400
+    except json.JSONDecodeError:
+        return jsonify({'error': '取得したファイルは有効なJSONではありません。'}), 400
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': f'取得中にエラーが発生しました: {str(e)}'}), 500
+    finally:
+        # Always clean up the temp file
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
 
 
 if __name__ == '__main__':

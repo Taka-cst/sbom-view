@@ -114,6 +114,63 @@ footer {
     font-size: 0.8rem;
 }
 
+/* URL input */
+.url-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.url-divider::before,
+.url-divider::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--border);
+}
+
+.url-input-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+}
+
+.url-field-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#url-input {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: monospace;
+}
+
+#url-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+#url-fetch-btn {
+    white-space: nowrap;
+    border: none;
+}
+
+.url-hint {
+    margin-top: 0.6rem;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
 /* Card */
 .card {
     background: var(--surface);

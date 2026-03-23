@@ -23,6 +23,18 @@
                 <button type="button" class="upload-btn" id="file-select-btn">ファイルを選択</button>
                 <p class="upload-formats">対応フォーマット: CycloneDX / SPDX (JSON)</p>
             </div>
+
+            <div class="url-divider">
+                <span>または URLから取得</span>
+            </div>
+
+            <div class="url-input-area">
+                <div class="url-field-row">
+                    <input type="url" id="url-input" placeholder="https://example.com/sbom.json" spellcheck="false">
+                    <button type="button" class="upload-btn" id="url-fetch-btn">取得して解析</button>
+                </div>
+                <p class="url-hint">SBOMのJSONファイルが公開されているURLを入力してください。取得したファイルは解析後すぐに削除されます。</p>
+            </div>
         </section>
 
         <!-- Loading -->
